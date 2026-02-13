@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molten Glass Flow Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Chart.js for Viscosity Graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="background-glow"></div>
+
+    <div class="glass-container">
+        <header>
+            <div class="header-row">
+                <h1>🔥 Melt Flow Calculator</h1>
+                <button id="reset-btn" class="icon-btn" title="Reset Inputs">↺</button>
+            </div>
+            <p>Hagen-Poiseuille Viscous Flow Model</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="flow">Flow Calculator</button>
+            <button class="tab-btn" data-tab="viscosity">Viscosity Model</button>
+        </div>
+
+        <div class="app-body">
+            <!-- Flow Calculator Tab -->
+            <main id="tab-flow" class="tab-content active main-panel">
+                <!-- Material Section -->
+                <section class="input-group">
+                    <h2>1. Material (물성치)</h2>
+                    <div class="control">
+                        <label for="material-select">Glass Type</label>
+                        <select id="material-select">
+                            <option value="soda">소다전석 유리 (Soda-Lime)</option>
+                            <option value="boro">붕규산 유리 (Borosilicate)</option>
+                            <option value="lead">납 유리 (Lead Glass)</option>
+                            <option value="custom">직접 입력 (Custom)</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="control">
+                            <label>Density (kg/m³)</label>
+                            <input type="number" id="density" value="2500" disabled>
+                        </div>
+                        <div class="control">
+                            <label>Viscosity (Pa·s)</label>
+                            <input type="number" id="viscosity" value="1000" disabled>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Geometry Section -->
+                <section class="input-group">
+                    <h2>2. Nozzle Geometry (노즐 형상)</h2>
+
+                    <div class="control">
+                        <label>Shape</label>
+                        <div class="shape-options">
+                            <button class="shape-btn active" data-shape="circle">
+                                <span class="icon">●</span> Circular
+                            </button>
+                            <button class="shape-btn" data-shape="rect">
+                                <span class="icon">■</span> Rectangular
+                            </button>
+                            <button class="shape-btn" data-shape="ellipse">
+                                <span class="icon">⬭</span> Elliptical
+                            </button>
+                            <button class="shape-btn" data-shape="annulus">
+                                <span class="icon">◎</span> Ring
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="geometry-container">
+                        <div class="inputs-col">
+                            <!-- Common Length -->
+                            <div class="control">
+                                <label>Length (mm)</label>
+                                <input type="number" id="length" placeholder="50">
+                            </div>
+
+                            <!-- Circular Inputs -->
+                            <div id="input-circle" class="shape-input">
+                                <div class="control">
+                                    <label>Diameter (mm)</label>
+                                    <input type="number" id="diameter" placeholder="4">
+                                </div>
+                            </div>
+
+                            <!-- Rectangular Inputs -->
+                            <div id="input-rect" class="shape-input hidden">
+                                <div class="control">
+                                    <label>Width (mm)</label>
+                                    <input type="number" id="width" placeholder="10">
+                                </div>
+                                <div class="control">
+                                    <label>Height (mm)</label>
+                                    <input type="number" id="height" placeholder="2">
+                                </div>
+                            </div>
+
+                            <!-- Elliptical Inputs -->
+                            <div id="input-ellipse" class="shape-input hidden">
+                                <div class="control">
+                                    <label>Major Axis (mm)</label>
+                                    <input type="number" id="major" placeholder="8">
+                                </div>
+                                <div class="control">
+                                    <label>Minor Axis (mm)</label>
+                                    <input type="number" id="minor" placeholder="4">
+                                </div>
+                            </div>
+
+                            <!-- Annular Inputs -->
+                            <div id="input-annulus" class="shape-input hidden">
+                                <div class="control">
+                                    <label>Outer Dia (mm)</label>
+                                    <input type="number" id="outer" placeholder="10">
+                                </div>
+                                <div class="control">
+                                    <label>Inner Dia (mm)</label>
+                                    <input type="number" id="inner" placeholder="6">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visualizer -->
+                        <div class="visualizer">
+                            <svg id="nozzle-preview" viewBox="0 0 100 100">
+                                <!-- Dynamic Shape will be drawn here -->
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="2" />
+                            </svg>
+                            <span class="vis-label">Preview</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mode Section -->
+                <section class="input-group">
+                    <h2>3. Flow Condition (운전 조건)</h2>
+                    <div class="mode-switch">
+                        <button class="mode-btn active" data-mode="gravity">Gravity (중력)</button>
+                        <button class="mode-btn" data-mode="pressure">Pressure (가압)</button>
+                    </div>
+
+                    <div id="input-gravity" class="control mode-input">
+                        <label>Head Height (mm)</label>
+                        <input type="number" id="head-height" placeholder="e.g. 100">
+                        <span class="unit-hint">ΔP = ρgh</span>
+                    </div>
+
+                    <div id="input-pressure" class="control mode-input hidden">
+                        <label>Pressure (bar)</label>
+                        <input type="number" id="pressure-bar" placeholder="e.g. 5">
+                        <span class="unit-hint">1 bar = 100,000 Pa</span>
+                    </div>
+                </section>
+
+                <!-- Result Section -->
+                <section class="result-card">
+                    <div class="result-item">
+                        <span class="label">Flow Rate (유량)</span>
+                        <span class="value" id="res-flow">0.0000</span>
+                        <span class="unit">kg/hr</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="label">Velocity (유속)</span>
+                        <span class="value" id="res-velocity">0.0000</span>
+                        <span class="unit">m/s</span>
+                    </div>
+                    <button id="record-btn" class="action-btn">Record Result</button>
+                </section>
+            </main>
+
+            <!-- Viscosity Calculator Tab -->
+            <main id="tab-viscosity" class="tab-content main-panel">
+                <section class="input-group">
+                    <div class="header-row">
+                        <h2>Composition Input</h2>
+                        <div class="unit-toggle">
+                            <label><input type="radio" name="comp-unit" value="wt" checked> Weight %</label>
+                            <label><input type="radio" name="comp-unit" value="mol"> Mol %</label>
+                        </div>
+                    </div>
+                    <div class="comp-grid" id="comp-grid">
+                        <!-- Inputs injected by JS -->
+                    </div>
+                    <div class="row" style="margin-top: 1rem;">
+                        <button id="normalize-btn" class="mode-btn">Normalize to 100%</button>
+                        <button id="clear-comp-btn" class="mode-btn"
+                            style="background: rgba(255, 99, 71, 0.2); border-color: rgba(255, 99, 71, 0.5); color: #ff6b6b;">Clear</button>
+                        <div class="total-display">Total: <span id="comp-total">0.00</span>%</div>
+                    </div>
+                </section>
+
+                <section class="result-card">
+                    <h3>Iso-Viscosity Temperatures</h3>
+                    <div class="result-grid">
+                        <div class="res-item">
+                            <span class="lbl">T(log 1.5)</span>
+                            <span class="val" id="t-1-5">---</span>
+                        </div>
+                        <div class="res-item">
+                            <span class="lbl">T(log 6.6)</span>
+                            <span class="val" id="t-6-6">---</span>
+                        </div>
+                        <div class="res-item">
+                            <span class="lbl">T(log 12.0)</span>
+                            <span class="val" id="t-12-0">---</span>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 1rem;">VFT Parameters</h3>
+                    <div class="vft-params" id="vft-params">
+                        A: -, B: -, T₀: -
+                    </div>
+                </section>
+
+                <section class="input-group">
+                    <h2>Specific Calculation (특정 지점 계산)</h2>
+                    <div class="row">
+                        <div class="control">
+                            <label>Temperature (°C)</label>
+                            <input type="number" id="calc-temp-input" placeholder="e.g. 1200">
+                        </div>
+                        <div class="control">
+                            <label>Viscosity (log η)</label>
+                            <input type="text" id="calc-visc-result" readonly placeholder="-">
+                        </div>
+                        <button id="calc-visc-btn" class="mode-btn active" style="flex:0;">Go</button>
+                    </div>
+                    <div class="row">
+                        <div class="control">
+                            <label>Viscosity (log η)</label>
+                            <input type="number" id="calc-log-input" placeholder="e.g. 3.0">
+                        </div>
+                        <div class="control">
+                            <label>Temperature (°C)</label>
+                            <input type="text" id="calc-temp-result" readonly placeholder="-">
+                        </div>
+                        <button id="calc-temp-btn" class="mode-btn active" style="flex:0;">Go</button>
+                    </div>
+                </section>
+
+                <!-- Chart container -->
+                <section class="chart-container">
+                    <canvas id="viscosityChart"></canvas>
+                </section>
+
+                <button id="record-visc-btn" class="action-btn" style="margin-top: 1rem;">Record Result</button>
+            </main>
+
+            <!-- History Section (Shared) -->
+            <aside class="side-panel">
+                <div class="history-header">
+                    <h3>History</h3>
+                    <button id="clear-hist-btn" class="clear-btn">Clear</button>
+                </div>
+                <div class="history-scroll">
+                    <ul id="history-list">
+                        <!-- Items will be injected here -->
+                    </ul>
+                    <div id="empty-msg" class="empty-state">No records yet</div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="viscosity_model.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
