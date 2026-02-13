@@ -1,6 +1,6 @@
 # Glass Viscosity & Flow Calculator
 
-A web-based tool for calculating the viscosity of molten glass based on its chemical composition (KCC#34 Model) and estimating flow rate through various nozzle shapes.
+A web-based tool for calculating the viscosity of molten glass based on its chemical composition and estimating flow rate through various nozzle shapes.
 
 ## Features
 
