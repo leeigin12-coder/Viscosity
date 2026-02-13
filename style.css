@@ -607,8 +607,8 @@ input:disabled {
 
 .result-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
     margin-top: 1rem;
 }
 
@@ -630,6 +630,12 @@ input:disabled {
     font-size: 1.1rem;
     color: var(--accent);
     font-weight: 600;
+}
+
+.sub-lbl {
+    font-size: 0.65rem !important;
+    opacity: 0.5;
+    margin-top: 0.2rem;
 }
 
 .vft-params {

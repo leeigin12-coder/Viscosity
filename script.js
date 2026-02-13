@@ -45,7 +45,8 @@ const dom = {
     compTotal: document.getElementById('comp-total'),
     resT15: document.getElementById('t-1-5'),
     resT66: document.getElementById('t-6-6'),
-    resT12: document.getElementById('t-12-0'),
+    resTg: document.getElementById('t-g'),
+    resTstrain: document.getElementById('t-strain'),
     vftParams: document.getElementById('vft-params'),
     viscosityChart: document.getElementById('viscosityChart'),
 
@@ -535,6 +536,7 @@ function recordViscosity() {
     // 2. Get Results
     const t15 = dom.resT15.textContent;
     const t66 = dom.resT66.textContent;
+    const tg = dom.resTg.textContent;
 
     const record = {
         id: Date.now(),
@@ -543,6 +545,7 @@ function recordViscosity() {
         composition: comps,
         t15: t15,
         t66: t66,
+        tg: tg,
         time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
 
@@ -580,8 +583,9 @@ function renderHistory() {
                         <span class="hist-meta">${item.time}</span>
                     </div>
                     <div class="hist-val" style="min-width:90px;">
-                        <div style="font-size:0.8rem;">T(1.5): ${item.t15}</div>
-                        <div class="sub">T(6.6): ${item.t66}</div>
+                        <div style="font-size:0.8rem;">Tw: ${item.t15}</div>
+                        <div class="sub">Ts: ${item.t66}</div>
+                        <div class="sub">Tg: ${item.tg || '---'}</div>
                     </div>
                 `;
             } else {
@@ -750,14 +754,13 @@ function calculateViscosityAndPlot() {
     // We can dynamically check model keys, but better to pre-calc known ones.
     // Let's implement a 'calculateTerm' helper
 
-    // 4. Calculate Iso-Temperatures
+    // 4. Calculate Iso-Temperatures (from model)
     const t15 = predictTemp('1.5', comp);
     const t66 = predictTemp('6.6', comp);
     const t12 = predictTemp('12', comp);
 
     dom.resT15.textContent = t15.toFixed(1) + " °C";
     dom.resT66.textContent = t66.toFixed(1) + " °C";
-    dom.resT12.textContent = t12.toFixed(1) + " °C";
 
     // 5. Solve VFT
     const vft = solveVFT(t15, 1.5, t66, 6.6, t12, 12);
@@ -765,9 +768,28 @@ function calculateViscosityAndPlot() {
 
     if (vft) {
         dom.vftParams.textContent = `A: ${vft.A.toFixed(3)}, B: ${vft.B.toFixed(1)}, T₀: ${vft.T0.toFixed(1)}`;
+
+        // 6. Calculate Tg and Tstrain from VFT
+        const logTg = 11.3;
+        const logTstrain = 14.5;
+        if (Math.abs(logTg - vft.A) > 0.001) {
+            const tg = vft.T0 + vft.B / (logTg - vft.A);
+            dom.resTg.textContent = tg.toFixed(1) + " °C";
+        } else {
+            dom.resTg.textContent = "---";
+        }
+        if (Math.abs(logTstrain - vft.A) > 0.001) {
+            const tstrain = vft.T0 + vft.B / (logTstrain - vft.A);
+            dom.resTstrain.textContent = tstrain.toFixed(1) + " °C";
+        } else {
+            dom.resTstrain.textContent = "---";
+        }
+
         updateChart(vft);
     } else {
         dom.vftParams.textContent = "A: -, B: -, T₀: -";
+        dom.resTg.textContent = "---";
+        dom.resTstrain.textContent = "---";
         if (chartInstance) chartInstance.data.datasets[0].data = [];
         if (chartInstance) chartInstance.update();
     }
