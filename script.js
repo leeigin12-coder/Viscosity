@@ -66,6 +66,12 @@ let historyData = [];
 let chartInstance = null;
 let currentVFT = null;
 
+// Color palette for overlaying multiple curves
+const CHART_COLORS = [
+    '#ff9f43', '#2ecc71', '#3498db', '#e74c3c', '#9b59b6',
+    '#1abc9c', '#f39c12', '#e67e22', '#00cec9', '#fd79a8'
+];
+
 // Full list of 54 oxides from Excel
 const COMMON_OXIDES = [
     'SiO2', 'B2O3', 'Al2O3', 'Na2O', 'K2O', 'MgO', 'CaO', 'Li2O', 'PbO', 'ZrO2',
@@ -139,6 +145,12 @@ function setupEventListeners() {
 
     // History Click Event
     dom.historyList.addEventListener('click', (e) => {
+        // Ignore clicks on delete button
+        if (e.target.closest('.hist-delete-btn')) {
+            const item = e.target.closest('.history-item');
+            if (item) deleteHistoryItem(parseInt(item.dataset.id));
+            return;
+        }
         const item = e.target.closest('.history-item');
         if (item) {
             const id = parseInt(item.dataset.id);
@@ -543,6 +555,7 @@ function recordViscosity() {
         type: 'viscosity',
         desc: desc || "Empty Composition",
         composition: comps,
+        vft: currentVFT ? { A: currentVFT.A, B: currentVFT.B, T0: currentVFT.T0 } : null,
         t15: t15,
         t66: t66,
         tg: tg,
@@ -552,11 +565,30 @@ function recordViscosity() {
     historyData.unshift(record);
     if (historyData.length > 20) historyData.pop();
     renderHistory();
+    // Update chart to include the new history curve
+    if (currentVFT) updateChart(currentVFT);
+}
+
+function deleteHistoryItem(id) {
+    historyData = historyData.filter(r => r.id !== id);
+    renderHistory();
+    // Refresh chart to remove deleted curve
+    if (currentVFT) updateChart(currentVFT);
+    else if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
 }
 
 function clearHistory() {
     historyData = [];
     renderHistory();
+    // Refresh chart to remove all history curves
+    if (currentVFT) updateChart(currentVFT);
+    else if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
 }
 
 function renderHistory() {
@@ -566,17 +598,26 @@ function renderHistory() {
         dom.emptyMsg.style.display = 'block';
     } else {
         dom.emptyMsg.style.display = 'none';
+        // Get viscosity history items for color assignment
+        const viscItems = historyData.filter(r => r.type === 'viscosity');
+
         historyData.forEach(item => {
             const li = document.createElement('li');
             li.className = 'history-item';
             li.dataset.id = item.id;
 
-            let iconSvg, contentLeft, contentRight;
+            // Color indicator for viscosity items
+            const viscIdx = viscItems.indexOf(item);
+            const colorDot = (item.type === 'viscosity' && viscIdx >= 0)
+                ? `<span class="hist-color-dot" style="background:${CHART_COLORS[viscIdx % CHART_COLORS.length]}"></span>`
+                : '';
+
+            const deleteBtn = `<button class="hist-delete-btn" title="삭제">✕</button>`;
 
             if (item.type === 'viscosity') {
-                iconSvg = getMiniSvg('viscosity');
-                // Specific styling for Viscosity items
+                const iconSvg = getMiniSvg('viscosity');
                 li.innerHTML = `
+                    ${colorDot}
                     <div class="hist-icon-wrapper">${iconSvg}</div>
                     <div class="hist-info">
                         <span class="hist-shape" style="font-size:0.85rem;">${item.desc}</span>
@@ -587,10 +628,10 @@ function renderHistory() {
                         <div class="sub">Ts: ${item.t66}</div>
                         <div class="sub">Tg: ${item.tg || '---'}</div>
                     </div>
+                    ${deleteBtn}
                 `;
             } else {
-                // Default Flow Item
-                iconSvg = getMiniSvg(item.shape);
+                const iconSvg = getMiniSvg(item.shape);
                 li.innerHTML = `
                     <div class="hist-icon-wrapper">${iconSvg}</div>
                     <div class="hist-info">
@@ -601,6 +642,7 @@ function renderHistory() {
                         <div>${item.flow} kg/hr</div>
                          <div class="sub">${item.vel} m/s</div>
                     </div>
+                    ${deleteBtn}
                 `;
             }
             dom.historyList.appendChild(li);
@@ -874,18 +916,55 @@ function solveVFT(T1, L1, T2, L2, T3, L3) {
 function updateChart(vft) {
     const ctx = dom.viscosityChart.getContext('2d');
 
-    // Generate data points
-    const dataPoints = [];
-    for (let t = 800; t <= 1700; t += 50) {
-        // log n = A + B / (T - T0)
-        // Check T > T0
+    // Generate data for current curve
+    const currentData = [];
+    for (let t = 800; t <= 1700; t += 10) {
         if (t > vft.T0) {
             const logVisc = vft.A + vft.B / (t - vft.T0);
-            if (logVisc > -2 && logVisc < 15) { // reasonable range
-                dataPoints.push({ x: t, y: logVisc });
+            if (logVisc > -2 && logVisc < 15) {
+                currentData.push({ x: t, y: logVisc });
             }
         }
     }
+
+    // Build datasets array: current + history
+    const datasets = [{
+        label: 'Current',
+        data: currentData,
+        borderColor: '#ff9f43',
+        backgroundColor: 'rgba(255, 159, 67, 0.15)',
+        borderWidth: 3,
+        pointRadius: 0,
+        fill: false
+    }];
+
+    // Overlay history viscosity curves
+    const viscHistory = historyData.filter(r => r.type === 'viscosity' && r.vft);
+    viscHistory.forEach((record, idx) => {
+        const hVft = record.vft;
+        const hData = [];
+        for (let t = 800; t <= 1700; t += 10) {
+            if (t > hVft.T0) {
+                const logVisc = hVft.A + hVft.B / (t - hVft.T0);
+                if (logVisc > -2 && logVisc < 15) {
+                    hData.push({ x: t, y: logVisc });
+                }
+            }
+        }
+        const color = CHART_COLORS[idx % CHART_COLORS.length];
+        // Short label from description
+        const shortDesc = record.desc.length > 25 ? record.desc.substring(0, 25) + '...' : record.desc;
+        datasets.push({
+            label: `#${idx + 1} ${shortDesc}`,
+            data: hData,
+            borderColor: color,
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            borderDash: [5, 3],
+            fill: false
+        });
+    });
 
     if (chartInstance) {
         chartInstance.destroy();
@@ -893,16 +972,7 @@ function updateChart(vft) {
 
     chartInstance = new Chart(ctx, {
         type: 'line',
-        data: {
-            datasets: [{
-                label: 'Viscosity Curve (log η vs T)',
-                data: dataPoints,
-                borderColor: '#ff9f43',
-                backgroundColor: 'rgba(255, 159, 67, 0.2)',
-                borderWidth: 2,
-                pointRadius: 0
-            }]
-        },
+        data: { datasets },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -919,7 +989,19 @@ function updateChart(vft) {
                 }
             },
             plugins: {
-                legend: { labels: { color: '#fff' } }
+                legend: {
+                    labels: { color: '#fff', font: { size: 11 } },
+                    display: true
+                },
+                tooltip: {
+                    mode: 'nearest',
+                    intersect: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
         }
     });
