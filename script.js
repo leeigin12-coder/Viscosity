@@ -126,7 +126,6 @@ function setupEventListeners() {
     dom.normalizeBtn.addEventListener('click', normalizeComposition);
     dom.clearCompBtn.addEventListener('click', clearComposition);
     dom.calcViscBtn.addEventListener('click', calculateSpecificViscosity);
-    dom.calcViscBtn.addEventListener('click', calculateSpecificViscosity);
     dom.calcTempBtn.addEventListener('click', calculateSpecificTemperature);
     dom.recordViscBtn.addEventListener('click', recordViscosity);
 
@@ -754,7 +753,7 @@ function calculateViscosityAndPlot() {
     // 4. Calculate Iso-Temperatures
     const t15 = predictTemp('1.5', comp);
     const t66 = predictTemp('6.6', comp);
-    const t12 = predictTemp('12.0', comp);
+    const t12 = predictTemp('12', comp);
 
     dom.resT15.textContent = t15.toFixed(1) + " °C";
     dom.resT66.textContent = t66.toFixed(1) + " °C";
