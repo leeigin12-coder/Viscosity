@@ -876,7 +876,7 @@ function updateChart(vft) {
 
     // Generate data points
     const dataPoints = [];
-    for (let t = 800; t <= 1600; t += 50) {
+    for (let t = 800; t <= 1700; t += 50) {
         // log n = A + B / (T - T0)
         // Check T > T0
         if (t > vft.T0) {
