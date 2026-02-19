@@ -156,6 +156,7 @@ header p {
     padding-left: 2rem;
     display: flex;
     flex-direction: column;
+    min-height: 500px;
     max-height: 80vh;
     overflow-y: auto;
 }
