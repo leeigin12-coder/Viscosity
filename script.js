@@ -1,7 +1,7 @@
 const GLASS_DB = {
-    "soda": { density: 2500, viscosity: 1000 },
-    "boro": { density: 2230, viscosity: 1000 },
-    "lead": { density: 3000, viscosity: 1000 },
+    "soda": { density: 2.5, viscosity: 1000 },
+    "boro": { density: 2.23, viscosity: 1000 },
+    "lead": { density: 3.0, viscosity: 1000 },
     "custom": { density: 0, viscosity: 0 }
 };
 
@@ -418,7 +418,8 @@ function drawVisualizer() {
 }
 
 function calculateFlow() {
-    const density = parseFloat(dom.densityInput.value) || 0;
+    const density_g_cm3 = parseFloat(dom.densityInput.value) || 0;
+    const density = density_g_cm3 * 1000; // Convert g/cm³ to kg/m³ for calculation
     const viscosity = parseFloat(dom.viscosityInput.value) || 0;
     const length_mm = parseFloat(dom.lengthInput.value) || 0;
 
@@ -1105,8 +1106,8 @@ function getVolumeMM3() {
 function calculateVolume() {
     const vol_mm3 = getVolumeMM3();
     const vol_cm3 = vol_mm3 / 1000; // 1 cm³ = 1000 mm³
-    const density_kg_m3 = parseFloat(document.getElementById('vol-density').value) || 0;
-    const density_g_cm3 = density_kg_m3 / 1000; // kg/m³ → g/cm³
+    const density_g_cm3 = parseFloat(document.getElementById('vol-density').value) || 0;
+    // Density is already in g/cm³, no conversion needed for weight calculation
     const weight_g = vol_cm3 * density_g_cm3;
 
     // Display results
@@ -1148,7 +1149,7 @@ function recordVolume() {
     const vol_mm3 = getVolumeMM3();
     const vol_cm3 = vol_mm3 / 1000;
     const density = parseFloat(document.getElementById('vol-density').value) || 0;
-    const weight_g = vol_cm3 * (density / 1000);
+    const weight_g = vol_cm3 * density; // Density is g/cm³
 
     if (vol_mm3 <= 0) return;
 
