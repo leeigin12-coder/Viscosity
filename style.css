@@ -594,6 +594,8 @@ input:disabled {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    max-width: 540px;
+    /* 5 * 100px + 4 * 8px = 532px */
 }
 
 .shape-btn {
