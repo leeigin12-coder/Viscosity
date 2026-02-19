@@ -477,6 +477,23 @@ input:disabled {
     flex-shrink: 0;
 }
 
+.result-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.result-with-unit input {
+    flex: 1;
+}
+
+.unit-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .unit-toggle {
     display: flex;
     gap: 15px;

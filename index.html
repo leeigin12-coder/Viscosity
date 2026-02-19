@@ -239,19 +239,25 @@
                             <input type="number" id="calc-temp-input" placeholder="e.g. 1200">
                         </div>
                         <div class="control">
-                            <label>Viscosity (log η)</label>
-                            <input type="text" id="calc-visc-result" readonly placeholder="-">
+                            <label>Viscosity</label>
+                            <div class="result-with-unit">
+                                <input type="text" id="calc-visc-result" readonly placeholder="-">
+                                <span class="unit-label">log Pa·s</span>
+                            </div>
                         </div>
                         <button id="calc-visc-btn" class="mode-btn active" style="flex:0;">Go</button>
                     </div>
                     <div class="row">
                         <div class="control">
-                            <label>Viscosity (log η)</label>
+                            <label>Viscosity (log Pa·s)</label>
                             <input type="number" id="calc-log-input" placeholder="e.g. 3.0">
                         </div>
                         <div class="control">
-                            <label>Temperature (°C)</label>
-                            <input type="text" id="calc-temp-result" readonly placeholder="-">
+                            <label>Temperature</label>
+                            <div class="result-with-unit">
+                                <input type="text" id="calc-temp-result" readonly placeholder="-">
+                                <span class="unit-label">°C</span>
+                            </div>
                         </div>
                         <button id="calc-temp-btn" class="mode-btn active" style="flex:0;">Go</button>
                     </div>

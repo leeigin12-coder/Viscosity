@@ -226,7 +226,7 @@ function calculateSpecificViscosity() {
     const visc = Math.pow(10, logVisc); // Pa·s
     const viscPoise = visc * 10; // 1 Pa·s = 10 Poise
 
-    dom.calcViscResult.value = `${logVisc.toFixed(3)} log Pa\u00b7s (${visc.toExponential(2)} Pa\u00b7s)`;
+    dom.calcViscResult.value = `${logVisc.toFixed(3)} (${visc.toExponential(2)} Pa\u00b7s)`;
 }
 
 function calculateSpecificTemperature() {
@@ -245,7 +245,7 @@ function calculateSpecificTemperature() {
     }
 
     const t = currentVFT.T0 + currentVFT.B / (logVisc - currentVFT.A);
-    dom.calcTempResult.value = `${t.toFixed(1)} °C`;
+    dom.calcTempResult.value = `${t.toFixed(1)}`;
 }
 
 function switchTab(tabId) {
