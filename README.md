@@ -1,6 +1,6 @@
-# Glass Viscosity & Flow Calculator
+# GlassFlow Pro
 
-A web-based tool for calculating the viscosity of molten glass based on its chemical composition and estimating flow rate through various nozzle shapes.
+A web-based tool for calculating the viscosity of molten glass and estimating melt flow rate through various nozzle shapes.
 
 ## Features
 
