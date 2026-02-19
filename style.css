@@ -154,6 +154,7 @@ header p {
 
 .side-panel {
     flex: 1;
+    min-width: 250px;
     border-left: 1px solid var(--glass-border);
     padding-left: 2rem;
     display: flex;
