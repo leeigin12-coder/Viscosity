@@ -584,6 +584,12 @@ input:disabled {
     margin-bottom: 1rem;
 }
 
+.shape-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
 .shape-btn {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
