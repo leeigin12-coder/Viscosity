@@ -23,7 +23,7 @@ const dom = {
     minorInput: document.getElementById('minor'),
     outerInput: document.getElementById('outer'),
     innerInput: document.getElementById('inner'),
-    shapeBtns: document.querySelectorAll('.shape-btn'),
+    shapeBtns: document.querySelectorAll('#tab-flow .shape-btn'),
     shapeInputs: document.querySelectorAll('.shape-input'),
     previewSvg: document.getElementById('nozzle-preview'),
     modeBtns: document.querySelectorAll('.mode-btn'),
