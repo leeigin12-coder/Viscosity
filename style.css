@@ -591,7 +591,8 @@ input:disabled {
 }
 
 .shape-btn {
-    flex: 1;
+    flex: 0 1 calc((100% - 32px) / 5);
+    min-width: 0;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--glass-border);
     color: var(--text-secondary);
