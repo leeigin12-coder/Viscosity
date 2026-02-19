@@ -160,8 +160,14 @@ header p {
     display: flex;
     flex-direction: column;
     min-height: 500px;
+    /* Removed max-height/overflow to allow border to stretch */
+}
+
+#history-list {
     max-height: 80vh;
     overflow-y: auto;
+    padding-right: 5px;
+    /* Prevent scrollbar overlap */
 }
 
 @media (max-width: 768px) {
