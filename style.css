@@ -144,6 +144,8 @@ header p {
 .app-body {
     display: flex;
     gap: 2rem;
+    min-height: 600px;
+    align-items: stretch;
 }
 
 .main-panel {
