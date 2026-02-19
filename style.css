@@ -684,6 +684,16 @@ input:disabled {
     margin-top: 0.2rem;
 }
 
+.vol-result-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.sub-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+}
+
 .vft-params {
     font-family: monospace;
     font-size: 0.9rem;

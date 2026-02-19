@@ -20,13 +20,14 @@
                 <h1>🔥 GlassFlow Pro</h1>
                 <button id="reset-btn" class="icon-btn" title="Reset Inputs">↺</button>
             </div>
-            <p>Hagen-Poiseuille Viscous Flow Model</p>
+            <p>Glass Viscosity, Flow & Volume Calculator</p>
         </header>
 
         <!-- Tab Navigation -->
         <div class="tab-nav">
             <button class="tab-btn active" data-tab="flow">Flow Calculator</button>
             <button class="tab-btn" data-tab="viscosity">Viscosity Model</button>
+            <button class="tab-btn" data-tab="volume">Volume & Weight</button>
         </div>
 
         <div class="app-body">
@@ -269,6 +270,122 @@
                 </section>
 
                 <button id="record-visc-btn" class="action-btn" style="margin-top: 1rem;">Record Result</button>
+            </main>
+
+            <!-- Volume & Weight Calculator Tab -->
+            <main id="tab-volume" class="tab-content main-panel">
+                <section class="input-group">
+                    <h2>1. Shape (형상 선택)</h2>
+                    <div class="shape-selector">
+                        <button class="shape-btn vol-shape-btn active" data-volshape="cylinder">원기둥</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="box">직육면체</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="sphere">구</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="hemisphere">반구</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="cone">원뿔</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="torus">링(도넛)</button>
+                        <button class="shape-btn vol-shape-btn" data-volshape="tube">유리관</button>
+                    </div>
+                </section>
+
+                <section class="input-group">
+                    <h2>2. Dimensions (치수 입력)</h2>
+                    <div class="row vol-dim-row" id="vol-dim-cylinder">
+                        <div class="control"><label>직경 (mm)</label><input type="number" id="vol-cyl-d" placeholder="0">
+                        </div>
+                        <div class="control"><label>높이 (mm)</label><input type="number" id="vol-cyl-h" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-box">
+                        <div class="control"><label>가로 (mm)</label><input type="number" id="vol-box-w" placeholder="0">
+                        </div>
+                        <div class="control"><label>세로 (mm)</label><input type="number" id="vol-box-d" placeholder="0">
+                        </div>
+                        <div class="control"><label>높이 (mm)</label><input type="number" id="vol-box-h" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-sphere">
+                        <div class="control"><label>직경 (mm)</label><input type="number" id="vol-sph-d" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-hemisphere">
+                        <div class="control"><label>직경 (mm)</label><input type="number" id="vol-hemi-d" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-cone">
+                        <div class="control"><label>밑면 직경 (mm)</label><input type="number" id="vol-cone-d"
+                                placeholder="0"></div>
+                        <div class="control"><label>높이 (mm)</label><input type="number" id="vol-cone-h" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-torus">
+                        <div class="control"><label>외경 (mm)</label><input type="number" id="vol-tor-D" placeholder="0">
+                        </div>
+                        <div class="control"><label>단면 직경 (mm)</label><input type="number" id="vol-tor-d"
+                                placeholder="0"></div>
+                    </div>
+                    <div class="row vol-dim-row hidden" id="vol-dim-tube">
+                        <div class="control"><label>외경 (mm)</label><input type="number" id="vol-tube-od"
+                                placeholder="0"></div>
+                        <div class="control"><label>내경 (mm)</label><input type="number" id="vol-tube-id"
+                                placeholder="0"></div>
+                        <div class="control"><label>길이 (mm)</label><input type="number" id="vol-tube-l" placeholder="0">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="input-group">
+                    <h2>3. Density (밀도)</h2>
+                    <div class="row">
+                        <div class="control"><label>밀도 (kg/m³)</label><input type="number" id="vol-density" value="2500"
+                                placeholder="2500"></div>
+                    </div>
+                </section>
+
+                <section class="input-group">
+                    <h2>Results (결과)</h2>
+                    <div class="result-grid vol-result-grid">
+                        <div class="res-item">
+                            <span class="lbl">부피</span>
+                            <span class="val" id="vol-result-vol">---</span>
+                            <span class="lbl sub-lbl">mm³</span>
+                        </div>
+                        <div class="res-item">
+                            <span class="lbl">부피</span>
+                            <span class="val" id="vol-result-cm3">---</span>
+                            <span class="lbl sub-lbl">cm³ (mL)</span>
+                        </div>
+                        <div class="res-item">
+                            <span class="lbl">무게</span>
+                            <span class="val" id="vol-result-weight">---</span>
+                            <span class="lbl sub-lbl">g</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="input-group">
+                    <h2>Reverse Calculation (역계산)</h2>
+                    <p class="sub-desc">목표 무게를 입력하면 필요한 치수 배율을 계산합니다.</p>
+                    <div class="row">
+                        <div class="control"><label>목표 무게 (g)</label><input type="number" id="vol-target-weight"
+                                placeholder="e.g. 100"></div>
+                        <div class="control">
+                            <label>필요 부피</label>
+                            <div class="result-with-unit">
+                                <input type="text" id="vol-reverse-vol" readonly placeholder="-">
+                                <span class="unit-label">cm³</span>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <label>치수 배율</label>
+                            <div class="result-with-unit">
+                                <input type="text" id="vol-reverse-scale" readonly placeholder="-">
+                                <span class="unit-label">×</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <button id="record-vol-btn" class="action-btn" style="margin-top: 1rem;">Record Result</button>
             </main>
 
             <!-- History Section (Shared) -->

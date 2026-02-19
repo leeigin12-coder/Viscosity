@@ -85,6 +85,7 @@ const COMMON_OXIDES = [
 function init() {
     setupEventListeners();
     setupViscosityUI();
+    setupVolumeCalc();
 
     // Init Flow Calc
     updateMaterialInputs();
@@ -629,6 +630,20 @@ function renderHistory() {
                     </div>
                     ${deleteBtn}
                 `;
+            } else if (item.type === 'volume') {
+                const iconSvg = getMiniSvg('circle');
+                li.innerHTML = `
+                    <div class="hist-icon-wrapper">${iconSvg}</div>
+                    <div class="hist-info">
+                        <span class="hist-shape">${item.desc}</span>
+                        <span class="hist-meta">${item.time}</span>
+                    </div>
+                    <div class="hist-val">
+                        <div>${item.vol}</div>
+                         <div class="sub">${item.weight}</div>
+                    </div>
+                    ${deleteBtn}
+                `;
             } else {
                 const iconSvg = getMiniSvg(item.shape);
                 li.innerHTML = `
@@ -1004,6 +1019,152 @@ function updateChart(vft) {
             }
         }
     });
+}
+
+// =========================================
+// VOLUME & WEIGHT CALCULATOR
+// =========================================
+let currentVolShape = 'cylinder';
+
+function setupVolumeCalc() {
+    // Shape buttons
+    document.querySelectorAll('.vol-shape-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.vol-shape-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentVolShape = btn.dataset.volshape;
+            // Show/hide dimension rows
+            document.querySelectorAll('.vol-dim-row').forEach(r => r.classList.add('hidden'));
+            const target = document.getElementById('vol-dim-' + currentVolShape);
+            if (target) target.classList.remove('hidden');
+            calculateVolume();
+        });
+    });
+
+    // Input listeners for all volume inputs
+    document.querySelectorAll('#tab-volume input[type="number"]').forEach(inp => {
+        inp.addEventListener('input', calculateVolume);
+    });
+
+    // Record button
+    const recordBtn = document.getElementById('record-vol-btn');
+    if (recordBtn) recordBtn.addEventListener('click', recordVolume);
+}
+
+function getVolumeMM3() {
+    const PI = Math.PI;
+    switch (currentVolShape) {
+        case 'cylinder': {
+            const d = parseFloat(document.getElementById('vol-cyl-d').value) || 0;
+            const h = parseFloat(document.getElementById('vol-cyl-h').value) || 0;
+            if (d <= 0 || h <= 0) return 0;
+            return PI * Math.pow(d / 2, 2) * h;
+        }
+        case 'box': {
+            const w = parseFloat(document.getElementById('vol-box-w').value) || 0;
+            const d = parseFloat(document.getElementById('vol-box-d').value) || 0;
+            const h = parseFloat(document.getElementById('vol-box-h').value) || 0;
+            if (w <= 0 || d <= 0 || h <= 0) return 0;
+            return w * d * h;
+        }
+        case 'sphere': {
+            const d = parseFloat(document.getElementById('vol-sph-d').value) || 0;
+            if (d <= 0) return 0;
+            return (4 / 3) * PI * Math.pow(d / 2, 3);
+        }
+        case 'hemisphere': {
+            const d = parseFloat(document.getElementById('vol-hemi-d').value) || 0;
+            if (d <= 0) return 0;
+            return (2 / 3) * PI * Math.pow(d / 2, 3);
+        }
+        case 'cone': {
+            const d = parseFloat(document.getElementById('vol-cone-d').value) || 0;
+            const h = parseFloat(document.getElementById('vol-cone-h').value) || 0;
+            if (d <= 0 || h <= 0) return 0;
+            return (1 / 3) * PI * Math.pow(d / 2, 2) * h;
+        }
+        case 'torus': {
+            const D = parseFloat(document.getElementById('vol-tor-D').value) || 0;
+            const d = parseFloat(document.getElementById('vol-tor-d').value) || 0;
+            if (D <= 0 || d <= 0 || d >= D) return 0;
+            const R = (D - d) / 2; // center radius
+            const r = d / 2;       // tube radius
+            return 2 * PI * PI * R * r * r;
+        }
+        case 'tube': {
+            const od = parseFloat(document.getElementById('vol-tube-od').value) || 0;
+            const id = parseFloat(document.getElementById('vol-tube-id').value) || 0;
+            const l = parseFloat(document.getElementById('vol-tube-l').value) || 0;
+            if (od <= 0 || id < 0 || id >= od || l <= 0) return 0;
+            return PI * (Math.pow(od / 2, 2) - Math.pow(id / 2, 2)) * l;
+        }
+        default: return 0;
+    }
+}
+
+function calculateVolume() {
+    const vol_mm3 = getVolumeMM3();
+    const vol_cm3 = vol_mm3 / 1000; // 1 cm³ = 1000 mm³
+    const density_kg_m3 = parseFloat(document.getElementById('vol-density').value) || 0;
+    const density_g_cm3 = density_kg_m3 / 1000; // kg/m³ → g/cm³
+    const weight_g = vol_cm3 * density_g_cm3;
+
+    // Display results
+    document.getElementById('vol-result-vol').textContent = vol_mm3 > 0 ? formatNumber(vol_mm3) : '---';
+    document.getElementById('vol-result-cm3').textContent = vol_cm3 > 0 ? formatNumber(vol_cm3) : '---';
+    document.getElementById('vol-result-weight').textContent = weight_g > 0 ? formatNumber(weight_g) : '---';
+
+    // Reverse calculation
+    const targetWeight = parseFloat(document.getElementById('vol-target-weight').value) || 0;
+    if (targetWeight > 0 && density_g_cm3 > 0) {
+        const neededVol = targetWeight / density_g_cm3;
+        document.getElementById('vol-reverse-vol').value = formatNumber(neededVol);
+
+        if (vol_cm3 > 0) {
+            const scale = Math.pow(neededVol / vol_cm3, 1 / 3);
+            document.getElementById('vol-reverse-scale').value = scale.toFixed(4);
+        } else {
+            document.getElementById('vol-reverse-scale').value = '-';
+        }
+    } else {
+        document.getElementById('vol-reverse-vol').value = '-';
+        document.getElementById('vol-reverse-scale').value = '-';
+    }
+}
+
+function formatNumber(n) {
+    if (n >= 1000000) return n.toExponential(3);
+    if (n >= 100) return n.toFixed(1);
+    if (n >= 1) return n.toFixed(3);
+    return n.toFixed(4);
+}
+
+const SHAPE_NAMES_KO = {
+    'cylinder': '원기둥', 'box': '직육면체', 'sphere': '구',
+    'hemisphere': '반구', 'cone': '원뿔', 'torus': '링(도넛)', 'tube': '유리관'
+};
+
+function recordVolume() {
+    const vol_mm3 = getVolumeMM3();
+    const vol_cm3 = vol_mm3 / 1000;
+    const density = parseFloat(document.getElementById('vol-density').value) || 0;
+    const weight_g = vol_cm3 * (density / 1000);
+
+    if (vol_mm3 <= 0) return;
+
+    const shapeName = SHAPE_NAMES_KO[currentVolShape] || currentVolShape;
+    const record = {
+        id: Date.now(),
+        type: 'volume',
+        shape: currentVolShape,
+        desc: `${shapeName}`,
+        vol: formatNumber(vol_cm3) + ' cm³',
+        weight: formatNumber(weight_g) + ' g',
+        time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    historyData.unshift(record);
+    if (historyData.length > 20) historyData.pop();
+    renderHistory();
 }
 
 init();
